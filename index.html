@@ -318,9 +318,21 @@
 
   .fade-out{opacity:0 !important;}
 
+  /* Reduced motion gets a gentler ceremony, not a missing one: everything
+     still opens, but by fading rather than travelling across the screen. */
   @media (prefers-reduced-motion:reduce){
-    .layer, .card-wrap, .flap, .seal-half{transition-duration:.01ms !important;}
     .hint span{animation:none;}
+    .seal-half{transition:opacity .55s ease !important;}
+    .broken .seal-half.l,
+    .broken .seal-half.r{transform:none;}
+    .flap{transition:opacity .7s ease !important;}
+    .opening .flap{transform:rotateX(0deg); opacity:0;}
+    .layer{transition:opacity .8s ease !important;}
+    .revealed .pocket-back,
+    .revealed .pocket-front,
+    .revealed .flap-holder{transform:none;}
+    .card-wrap{transition:opacity .8s ease, filter .8s ease !important;}
+    .card-wrap.fading{opacity:0;}
   }
 </style>
 
@@ -386,7 +398,7 @@
   var state = 'sealed';
   var timers = [];
 
-  function later(fn, ms){ timers.push(setTimeout(fn, reduced ? Math.min(ms, 40) : ms)); }
+  function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
 
   function peekTransform(){
     var h = cardWrap.getBoundingClientRect().height || 400;
@@ -426,6 +438,8 @@
     scene.classList.add('broken');
     hint.classList.add('fade-out');
 
+    if(reduced){ openGently(); return; }
+
     later(function(){ scene.classList.add('opening'); }, 500);
     later(function(){ flapHolder.classList.add('flap-behind'); }, 940);
 
@@ -446,6 +460,34 @@
     }, 3550);
   }
 
+  /* The reduced-motion sequence: same beats, same pacing, but the card
+     cross-fades into place instead of flying there. */
+  function openGently(){
+    later(function(){
+      scene.classList.add('opening');
+      flapHolder.classList.add('flap-behind');
+    }, 450);
+
+    later(function(){
+      body.classList.add('lifted');
+      cardWrap.classList.add('fading');
+    }, 1000);
+
+    later(function(){
+      body.classList.add('revealed');
+      cardWrap.style.transition = 'none';
+      cardWrap.style.transform = CENTERED;
+      void cardWrap.offsetWidth;
+      cardWrap.style.transition = '';       // back to the stylesheet's opacity fade
+      cardWrap.classList.remove('fading');  // ...and fades in, centred
+    }, 1750);
+
+    later(function(){
+      state = 'open';
+      afterbar.classList.add('show');
+    }, 2750);
+  }
+
   function reset(){
     timers.forEach(clearTimeout); timers = [];
     state = 'sealed';
@@ -453,12 +495,13 @@
     body.classList.remove('revealed', 'lifted');
     scene.classList.remove('opening', 'broken');
     flapHolder.classList.remove('flap-behind');
+    cardWrap.classList.remove('fading');
     stopPetals();
 
     cardWrap.style.transition = 'none';
     cardWrap.style.transform = BASE;
     void cardWrap.offsetHeight;           // flush, so the next open starts from sealed
-    cardWrap.style.transition = SLIDE;
+    cardWrap.style.transition = reduced ? '' : SLIDE;
 
     scene.style.cursor = 'pointer';
     later(function(){ hint.classList.remove('fade-out'); }, 400);
