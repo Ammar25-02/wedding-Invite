@@ -37,13 +37,14 @@
     --card-ratio:0.7018;          /* 499 / 711 */
     --fit-pad-x:40px;
     --fit-pad-y:28px;
-    --fit-reserve:70px;           /* room for the scroll cue below the card */
+    --fit-reserve:100px;          /* keeps the card clear of the scroll cue */
   }
   @media (max-width:520px){
     :root{--fit-pad-x:18px; --fit-pad-y:14px;}
   }
   @media (max-height:520px){
-    :root{--fit-pad-y:10px; --fit-reserve:54px;}
+    /* short and wide: height is the limiting side, so the cue needs more */
+    :root{--fit-pad-y:10px; --fit-reserve:100px;}
   }
   /* svh, not dvh: the small-viewport unit doesn't change when a mobile
      toolbar collapses, so the hero never reflows (and the card never
@@ -98,7 +99,10 @@
     min-height:100vh;
     min-height:calc(100 * var(--vh));
     display:flex; align-items:center; justify-content:center;
-    padding:var(--fit-pad-y) var(--fit-pad-x) calc(var(--fit-pad-y) + var(--fit-reserve));
+    /* symmetric, so the card is truly centred; the scroll cue is overlaid at
+       the bottom rather than taking a slice of the box. --fit-reserve keeps
+       the card short enough to clear it when height is the limiting side. */
+    padding:var(--fit-pad-y) var(--fit-pad-x);
   }
 
   .scene{
@@ -150,7 +154,11 @@
   .lifted .card-shade{opacity:0;}
   /* … and once lifted the card lives in the hero's flow, sized to fit */
   .card-wrap.placed{
+    /* relative, so .card-shade has something to anchor to — which means the
+       sealed state's left/bottom offsets must be cleared, or the card lands
+       half a hero to the right of centre */
     position:relative; z-index:auto;
+    left:auto; right:auto; top:auto; bottom:auto;
     width:min(
       calc(100vw - var(--fit-pad-x) * 2),
       calc((calc(100 * var(--vh)) - var(--fit-pad-y) * 2 - var(--fit-reserve)) * var(--card-ratio))
@@ -319,7 +327,8 @@
   @keyframes breathe{0%,100%{opacity:.5} 50%{opacity:1}}
 
   .cue{
-    position:absolute; left:50%; bottom:calc(var(--fit-pad-y) + 6px);
+    position:absolute; left:50%;
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px));
     transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center; gap:6px;
     padding:6px 10px;
