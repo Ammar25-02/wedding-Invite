@@ -1,4 +1,11 @@
-<title>Ammar &amp; Atiqah</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4E8EA">
+<meta name="description" content="You are invited to the engagement of Ammar and Atiqah - Saturday 7 November 2026, 12 PM, Melaka.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%8C%3C/text%3E%3C/svg%3E"><title>Ammar &amp; Atiqah</title>
 <style>
   :root{
     --ink:#5E3A47;
@@ -17,8 +24,12 @@
     --serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Palatino,Georgia,'Times New Roman',serif;
     --sans:'Optima','Gill Sans MT',Candara,'Trebuchet MS','Segoe UI',system-ui,sans-serif;
 
+    /* dynamic viewport height where supported, so a collapsing iOS toolbar
+       doesn't resize the envelope mid-animation */
+    --vh:1vh;
+
     /* the envelope is sized around the card — card ratio 499 x 711 */
-    --env-w:min(72vw, 296px, 40vh);
+    --env-w:min(72vw, 296px, calc(40 * var(--vh)));
     --env-h:calc(var(--env-w) * 1.32);
     --card-w:calc(var(--env-w) * 0.88);
 
@@ -35,12 +46,16 @@
   @media (max-height:520px){
     :root{--fit-pad-y:10px; --fit-reserve:58px;}
   }
+  @supports (height:1dvh){
+    :root{--vh:1dvh;}
+  }
 
   *{box-sizing:border-box;}
 
   body{
     margin:0;
     min-height:100vh;
+    min-height:calc(100 * var(--vh));
     background:
       radial-gradient(58% 40% at 16% 10%, #FCF3F4 0%, rgba(252,243,244,0) 68%),
       radial-gradient(48% 36% at 88% 20%, #FAEAED 0%, rgba(250,234,237,0) 70%),
@@ -63,10 +78,11 @@
   .stage{
     position:relative; z-index:2;
     min-height:100vh;
+    min-height:calc(100 * var(--vh));
     /* the envelope sits low: the flap swings up behind it and the card
        rises above it, so the headroom above matters more than below */
     display:flex; align-items:flex-end; justify-content:center;
-    padding-bottom:14vh;
+    padding-bottom:calc(14 * var(--vh));
   }
 
   /* ---------- envelope ---------- */
@@ -251,7 +267,7 @@
     left:50%; top:calc(50% - var(--fit-reserve) / 2); bottom:auto;
     width:min(
       calc(100vw - var(--fit-pad-x) * 2),
-      calc((100vh - var(--fit-pad-y) * 2 - var(--fit-reserve)) * var(--card-ratio))
+      calc((calc(100 * var(--vh)) - var(--fit-pad-y) * 2 - var(--fit-reserve)) * var(--card-ratio))
     );
     transform:translate(-50%,-50%) scale(1);
   }
@@ -308,6 +324,8 @@
   }
 </style>
 
+</head>
+<body>
 <canvas id="petals" aria-hidden="true"></canvas>
 
 <main class="stage">
@@ -530,3 +548,6 @@
   }
 })();
 </script>
+
+</body>
+</html>
