@@ -31,6 +31,9 @@
     --env-w:min(72vw, 296px, calc(40 * var(--vh)));
     --env-h:calc(var(--env-w) * 1.32);
     --card-w:calc(var(--env-w) * 0.88);
+    /* one length for both of the seal's axes: a percentage height would
+       resolve against the envelope's height and come out oval */
+    --seal:clamp(48px, calc(var(--env-w) * 0.17), 62px);
 
     /* the revealed card is sized by CSS, not measured, so a rotation or a
        collapsing mobile URL bar can never leave it mis-scaled */
@@ -265,7 +268,9 @@
   .seal{
     position:absolute; z-index:6;
     left:50%; top:44%;
-    width:clamp(48px,17%,62px); aspect-ratio:1;
+    /* sized outright rather than via aspect-ratio, which needs Safari 15 —
+       on 14.x the seal collapsed to nothing and vanished */
+    width:var(--seal); height:var(--seal);
     transform:translate(-50%,-50%);
     padding:0; border:0; background:none;
     border-radius:50%;
@@ -317,7 +322,10 @@
 
   /* ---------- hint + scroll cue ---------- */
   .hint{
-    position:fixed; left:0; right:0; bottom:6vh; z-index:3;
+    /* svh-based: plain vh resolves against iOS's large viewport, which put
+       this behind the Safari toolbar */
+    position:fixed; left:0; right:0; z-index:3;
+    bottom:calc(5 * var(--vh) + env(safe-area-inset-bottom, 0px));
     margin:0; text-align:center;
     font-size:10.5px; letter-spacing:.3em; text-transform:uppercase;
     color:var(--ink-soft);
@@ -564,7 +572,9 @@
   </div>
 </div>
 
-<p class="hint" id="hint"><span>Tap the seal to open</span></p>
+<!-- "tap to open", not "tap the seal": the whole envelope is the target, so the
+     instruction holds even if the seal itself fails to render -->
+<p class="hint" id="hint"><span>Tap to open</span></p>
 
 <script>
 (function(){
