@@ -459,7 +459,9 @@
     opacity:0; pointer-events:none;
     transition:opacity .8s ease, background .25s ease, color .25s ease;
   }
-  .reading .sound{opacity:1; pointer-events:auto;}
+  /* shown as soon as the music is actually playing, which may be before the
+     card is opened — nobody should hear sound they cannot switch off */
+  .playing .sound{opacity:1; pointer-events:auto;}
   .sound:hover{background:#fff; color:var(--ink);}
   .sound:focus-visible{outline:2px solid var(--gold); outline-offset:3px;}
   .sound svg{width:17px; height:17px;}
@@ -726,12 +728,26 @@
     later(finish, 2750);
   }
 
-  /* Starts on the opening tap: that gesture is what lets a browser play audio
-     at all. Fades up so it doesn't jolt anyone with the volume already high. */
+  /* Try to play the moment the page opens. Browsers block audio that starts
+     without a gesture, so if that attempt is refused we wait and start on the
+     visitor's very first touch, key or scroll instead — whichever comes first.
+     On a phone that is the tap that opens the envelope; on a desktop where the
+     visitor has played media on this site before, it simply starts at once. */
+  var GESTURES = ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'scroll'];
+
   function startSong(){
+    if(!song.paused) return;                  // already going
     song.volume = 0;
     var play = song.play();
-    if(play && play.catch) play.catch(function(){});   // blocked: the toggle still works
+    if(play && play.then){
+      play.then(playing).catch(waitForGesture);
+    } else {
+      playing();                              // no promise: assume it took
+    }
+  }
+
+  function playing(){
+    body.classList.add('playing');            // reveals the mute control
     var step = 0, target = 0.7;
     var iv = setInterval(function(){
       step++;
@@ -740,9 +756,12 @@
     }, 2500 / 45);
   }
 
-  function stopSong(){
-    song.pause();
-    song.currentTime = 0;
+  function waitForGesture(){
+    function go(){
+      GESTURES.forEach(function(t){ document.removeEventListener(t, go, true); });
+      startSong();
+    }
+    GESTURES.forEach(function(t){ document.addEventListener(t, go, true); });
   }
 
   sound.addEventListener('click', function(){
@@ -755,7 +774,8 @@
   function reset(){
     timers.forEach(clearTimeout); timers = [];
     state = 'sealed';
-    stopSong();
+    /* the music is the page's, not the envelope's — resealing the card is no
+       reason to cut it off. The mute control is there for that. */
 
     /* jump to the top before sealing again, so the page isn't left scrolled
        to content that is about to be hidden */
@@ -913,6 +933,8 @@
       if(state === 'sealed') cardWrap.style.transform = BASE;
     });
   }
+
+  startSong();          // as early as this browser will allow
 })();
 </script>
 
